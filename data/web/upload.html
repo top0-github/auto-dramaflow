@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>素材上传 - Toonflow</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f5f5f5; color:#333; }
+.header { background:#1a1a2e; color:#fff; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; }
+.header h1 { font-size:18px; }
+.header a { color:#8ab4f8; text-decoration:none; font-size:13px; }
+.container { max-width:640px; margin:24px auto; padding:0 16px; }
+.card { background:#fff; border-radius:8px; padding:24px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+.card h2 { font-size:15px; margin-bottom:16px; color:#1a1a2e; }
+.form-group { margin-bottom:14px; }
+.form-group label { display:block; font-size:13px; color:#666; margin-bottom:4px; }
+.form-group input,.form-group select,.form-group textarea { width:100%; padding:8px 12px; border:1px solid #ddd; border-radius:6px; font-size:14px; outline:none; transition:border-color .2s; }
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus { border-color:#4a90d9; }
+.form-group textarea { resize:vertical; min-height:60px; }
+.preview { width:100%; max-height:200px; object-fit:contain; border-radius:6px; border:1px solid #eee; margin-top:8px; display:none; }
+.btn { width:100%; padding:10px; border:none; border-radius:6px; font-size:14px; cursor:pointer; font-weight:500; transition:opacity .2s; }
+.btn-primary { background:#4a90d9; color:#fff; }
+.btn-primary:hover { opacity:0.9; }
+.btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
+.msg { padding:10px 14px; border-radius:6px; font-size:13px; margin-bottom:14px; display:none; }
+.msg-success { background:#e6f9e6; color:#2e7d32; display:block; }
+.msg-error { background:#fdecea; color:#c62828; display:block; }
+.upload-zone { border:2px dashed #ddd; border-radius:8px; padding:32px; text-align:center; cursor:pointer; transition:border-color .2s,background .2s; }
+.upload-zone:hover { border-color:#4a90d9; background:#f0f7ff; }
+.upload-zone .icon { font-size:32px; margin-bottom:8px; }
+.upload-zone .hint { font-size:13px; color:#999; }
+.upload-zone input[type=file] { display:none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>&#x1F4E4; 素材上传</h1>
+  <a href="/index.html">返回工作台</a>
+</div>
+
+<div class="container">
+
+  <div class="card" id="loginCard">
+    <h2>&#x1F511; 登录</h2>
+    <div class="form-group">
+      <label>账号</label>
+      <input type="text" id="username" value="admin" placeholder="admin" />
+    </div>
+    <div class="form-group">
+      <label>密码</label>
+      <input type="password" id="password" placeholder="admin123" />
+    </div>
+    <button class="btn btn-primary" onclick="login()">登录</button>
+  </div>
+
+  <div class="card" id="uploadCard" style="display:none">
+    <h2>&#x1F4DD; 素材信息</h2>
+    <div id="msg"></div>
+    <div class="form-group">
+      <label>所属项目</label>
+      <select id="projectId"></select>
+    </div>
+    <div class="form-group">
+      <label>模式</label>
+      <select id="mode" onchange="toggleMode()">
+        <option value="new">新建素材并上传</option>
+        <option value="existing">关联已有素材</option>
+      </select>
+    </div>
+    <div class="form-group" id="existingAssetGroup" style="display:none">
+      <label>选择已有素材</label>
+      <select id="assetId"><option value="">请先选择类型，加载素材列表</option></select>
+    </div>
+    <div class="form-group">
+      <label>素材类型</label>
+      <select id="type" onchange="onTypeChange()">
+        <option value="role">角色</option>
+        <option value="scene">场景</option>
+        <option value="tool">道具</option>
+      </select>
+    </div>
+    <div id="newAssetFields">
+      <div class="form-group">
+        <label>素材名称</label>
+        <input type="text" id="name" placeholder="如：沈辞、城楼、长剑" />
+      </div>
+      <div class="form-group">
+        <label>视觉描述</label>
+        <textarea id="describe" placeholder="30-80字的视觉描述，如：黑衣少年，眉目清冷，身形修长..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>提示词（选填）</label>
+        <textarea id="prompt" placeholder="英文提示词，如：a young man in black robes, cold expression..."></textarea>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>上传图片</label>
+      <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+        <div class="icon">&#x1F5BC;</div>
+        <div class="hint">点击选择图片（jpg / png / webp）</div>
+        <input type="file" id="fileInput" accept="image/*" onchange="handleFile(event)" />
+      </div>
+      <img id="preview" class="preview" />
+      <button class="btn" id="clearBtn" style="display:none;margin-top:8px;background:#f5f5f5;color:#666;border:1px solid #ddd;" onclick="clearImage()">重新选择图片</button>
+    </div>
+    <button class="btn btn-primary" id="submitBtn" onclick="upload()">提交上传</button>
+  </div>
+</div>
+
+<script>
+let token = '';
+let base64Data = '';
+
+// 尝试从 localStorage 取 token，自动登录
+const saved = localStorage.getItem('toonflow_upload_token');
+if (saved) { token = saved; autoLoad(); }
+
+async function api(path, method, body) {
+  const res = await fetch(path, {
+    method,
+    headers: {
+      'Content-Type':'application/json',
+      'Authorization': token
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  return res.json();
+}
+
+async function login() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+  if (!username || !password) return alert('请输入账号和密码');
+
+  const res = await fetch('/api/login/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  });
+  const data = await res.json();
+  if (data.code === 200 && data.data?.token) {
+    token = data.data.token;
+    localStorage.setItem('toonflow_upload_token', token);
+    await loadProjects();
+    document.getElementById('loginCard').style.display = 'none';
+  } else {
+    alert('登录失败: ' + (data.message || ''));
+  }
+}
+
+async function autoLoad() {
+  const ok = await loadProjects();
+  if (ok) document.getElementById('loginCard').style.display = 'none';
+}
+
+async function loadProjects() {
+  const data = await api('/api/project/getProject', 'POST');
+  if (data.code === 200) {
+    const select = document.getElementById('projectId');
+    select.innerHTML = data.data.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    document.getElementById('uploadCard').style.display = 'block';
+    return true;
+  } else {
+    document.getElementById('loginCard').style.display = 'block';
+    document.getElementById('uploadCard').style.display = 'none';
+    localStorage.removeItem('toonflow_upload_token');
+    return false;
+  }
+}
+
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    base64Data = ev.target.result;
+    document.getElementById('preview').src = base64Data;
+    document.getElementById('preview').style.display = 'block';
+    document.getElementById('clearBtn').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImage() {
+  base64Data = '';
+  document.getElementById('preview').style.display = 'none';
+  document.getElementById('preview').src = '';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('clearBtn').style.display = 'none';
+}
+
+function showMsg(text, type) {
+  const el = document.getElementById('msg');
+  el.className = 'msg msg-' + type;
+  el.textContent = text;
+}
+
+function toggleMode() {
+  const isNew = document.getElementById('mode').value === 'new';
+  document.getElementById('newAssetFields').style.display = isNew ? 'block' : 'none';
+  document.getElementById('existingAssetGroup').style.display = isNew ? 'none' : 'block';
+  if (!isNew) onTypeChange();
+}
+
+async function onTypeChange() {
+  const mode = document.getElementById('mode').value;
+  if (mode !== 'existing') return;
+  const projectId = document.getElementById('projectId').value;
+  const type = document.getElementById('type').value;
+  if (!projectId) return;
+  const data = await api('/api/assets/getAssetsApi', 'POST', { projectId: Number(projectId), type, page: 1, limit: 200 });
+  const select = document.getElementById('assetId');
+  if (data.code === 200 && data.data?.data) {
+    select.innerHTML = data.data.data.map(a => `<option value="${a.id}">${a.name}（${a.describe || '无描述'}）</option>`).join('');
+  }
+}
+
+async function upload() {
+  const btn = document.getElementById('submitBtn');
+  const mode = document.getElementById('mode').value;
+  const projectId = Number(document.getElementById('projectId').value);
+  const type = document.getElementById('type').value;
+
+  if (!base64Data) return showMsg('请选择要上传的图片', 'error');
+
+  let body;
+
+  if (mode === 'existing') {
+    const assetId = document.getElementById('assetId').value;
+    if (!assetId) return showMsg('请选择已有素材', 'error');
+    body = { projectId, type, assetId: Number(assetId), imageBase64: base64Data.split(',')[1] || base64Data };
+  } else {
+    const name = document.getElementById('name').value;
+    const describe = document.getElementById('describe').value;
+    const prompt = document.getElementById('prompt').value;
+    if (!name || !describe) return showMsg('请填写素材名称和视觉描述', 'error');
+    body = { projectId, type, name, describe, prompt, imageBase64: base64Data.split(',')[1] || base64Data };
+  }
+
+  btn.disabled = true;
+  btn.textContent = '上传中...';
+  showMsg('', 'error');
+
+  try {
+    const res = await api('/api/assets/uploadAssetImage', 'POST', body);
+    if (res.code === 200) {
+      showMsg(`上传成功！素材 ID: ${res.data.assetsId}，图片 ID: ${res.data.imageId}`, 'success');
+      base64Data = '';
+      document.getElementById('preview').style.display = 'none';
+      document.getElementById('fileInput').value = '';
+      document.getElementById('name').value = '';
+      document.getElementById('describe').value = '';
+      document.getElementById('prompt').value = '';
+    } else {
+      showMsg('上传失败: ' + (res.message || JSON.stringify(res)), 'error');
+    }
+  } catch(e) {
+    showMsg('网络错误: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '提交上传';
+  }
+}
+</script>
+</body>
+</html>
