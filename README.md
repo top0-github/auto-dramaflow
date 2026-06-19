@@ -28,7 +28,7 @@
 
   > 🚀 **一站式短剧工程**：从文本到角色，从分镜到视频，0门槛全流程AI化，创作效率提升10倍+！
   >
-  > 本项目基于 [Toonflow](https://github.com/HBAI-Ltd/Toonflow-app) 进行二次开发，新增了**阿里云百炼(DashScope)通义千问模型**支持及**独立素材上传页面**等功能。
+  > 本项目基于 [Toonflow](https://github.com/HBAI-Ltd/Toonflow-app) 进行二次开发，新增了**阿里云百炼(DashScope)通义千问模型**、**独立素材上传页面**、**导演技能库(director_skills)**、**导演审阅子Agent**、**分镜图管理接口**等功能。
 </div>
 
 ---
@@ -56,6 +56,14 @@ Auto-Dramaflow 是面向短剧生产的 AI 工作台，围绕"策划 → 编剧 
   新增 DashScope 供应商，完整支持 Qwen3/Qwen2.5 系列文本模型、Wan2.6 图片生成、Wan2.7 及 HappyHorse 视频生成。
 - ✅ **独立素材上传页面 (upload.html)**  
   提供独立的 Web 素材上传界面，支持新建素材/关联已有素材两种模式，方便快速批量导入角色、场景、道具图片。
+- ✅ **导演技能库 (director_skills)**  
+  新增 31 位知名导演风格配置（如克里斯托弗·诺兰、周星驰、宫崎骏等），导演 Agent 可参考对应风格进行分镜规划和影片节奏控制。
+- ✅ **导演审阅子 Agent**  
+  ScriptAgent 新增导演审阅子 Agent，可基于导演风格对剧本和分镜进行风格化审阅与调整建议。
+- ✅ **分镜图管理接口**  
+  新增分镜图上传 (`storyboard/uploadImage`)、重置 (`storyboard/resetImage`) 及视频提示词检查 (`workbench/checkVideoPrompt`) 接口，完善分镜工作流。
+- ✅ **Agent 模型配置动态更新**  
+  新增 `setting/agentDeploy/updateAgentModel` 接口，支持在线动态切换各 Agent 子模块所使用的 AI 模型，无需重启服务。
 
 ---
 
@@ -154,6 +162,83 @@ POST /api/assets/uploadAssetImage
 | describe | string | 新建必填 | 视觉描述 |
 | prompt | string | 选填 | 英文提示词 |
 | assetId | number | 关联必填 | 已有素材 ID |
+
+---
+
+## 导演技能库 (director_skills)
+
+为导演 Agent 提供了 31 位知名导演的风格参考文件，位于 `data/skills/director_skills/` 目录。每位导演的风格文件涵盖其标志性的镜头语言、叙事节奏、色调偏好、场景构图等视觉美学特征。
+
+| 类别 | 导演 |
+| :--- | :--- |
+| 🎬 好莱坞 | 克里斯托弗·诺兰、史蒂文·斯皮尔伯格、昆汀·塔伦蒂诺、詹姆斯·卡梅隆、大卫·芬奇、弗朗西斯·福特·科波拉 |
+| 🎬 欧洲 | 英格玛·伯格曼、米开朗基罗·安东尼奥尼、费德里科·费里尼、路易斯·布努埃尔 |
+| 🎬 亚洲 | 黑泽明、宫崎骏、小津安二郎、奉俊昊、朴赞郁、是枝裕和 |
+| 🎬 华语 | 周星驰、王家卫、张艺谋、陈凯歌、姜文、侯孝贤、杨德昌、徐克、吴宇森、贾樟柯、李安、杜琪峰、陈可辛、路阳 |
+
+### 使用方式
+
+1. 在项目设置中选择目标导演风格
+2. 导演规划 Agent 会自动加载对应导演的 Markdown 风格文件作为参考
+3. 生成的分镜 prompt 和视频 prompt 会融入该导演的视觉美学特征
+
+### 文件结构
+
+```
+data/skills/director_skills/
+├── 克里斯托弗·诺兰.md
+├── 周星驰.md
+├── 宫崎骏.md
+└── ...
+```
+
+---
+
+## 导演审阅子 Agent
+
+在 ScriptAgent 三层架构（决策层 → 执行层 → 监督层）中新增导演审阅子 Agent，位于监督层。
+
+- **功能**：基于选定的导演风格，对剧本和分镜进行风格化审阅
+- **输出**：针对分镜节奏、镜头语言、画面构图、色调氛围等维度提供调整建议
+- **配置**：通过 `updateAgentModel` 接口可动态切换审阅 Agent 使用的 AI 模型
+
+---
+
+## 分镜图管理接口
+
+新增三个 API 接口，完善分镜工作流：
+
+### 分镜图上传
+
+```
+POST /api/production/storyboard/uploadImage
+```
+
+支持将本地生成的图片直接上传并关联到指定分镜，跳过 AI 生成环节。
+
+### 分镜图重置
+
+```
+POST /api/production/storyboard/resetImage
+```
+
+重置某个分镜的图片状态，支持重新生成或重新上传。
+
+### 视频提示词检查
+
+```
+POST /api/production/workbench/checkVideoPrompt
+```
+
+在提交视频生成任务前，对分镜的提示词进行格式校验和内容检查，减少无效调用。
+
+### Agent 模型动态更新
+
+```
+POST /api/setting/agentDeploy/updateAgentModel
+```
+
+支持在线动态切换各 Agent 子模块（决策层/执行层/监督层/导演审阅等）所使用的 AI 模型，无需修改配置文件和重启服务。
 
 ---
 
@@ -387,6 +472,8 @@ pm2 monit                # 监控面板
 │  ├─ 📂 oss/               # 对象存储（素材/角色/场景）
 │  ├─ 📂 serve/             # 生产环境入口
 │  ├─ 📂 skills/            # Agent 技能提示词
+│  │   ├─ director_skills/  # 🆕 导演技能库（31位导演风格）
+│  │   └─ ...
 │  ├─ 📂 vendor/            # AI 供应商脚本
 │  │   ├─ dashscope.ts      # 🆕 阿里云百炼(DashScope)供应商
 │  │   ├─ openai.ts         # OpenAI 供应商
@@ -411,10 +498,17 @@ pm2 monit                # 监控面板
 │  ├─ 📂 cornerScape/       # 分镜管理
 │  ├─ 📂 novel/             # 小说管理
 │  ├─ 📂 production/        # 制作管理
+│  │   ├─ storyboard/
+│  │   │   ├─ uploadImage.ts  # 🆕 分镜图上传
+│  │   │   └─ resetImage.ts   # 🆕 分镜图重置
+│  │   └─ workbench/
+│  │       └─ checkVideoPrompt.ts  # 🆕 视频提示词检查
 │  ├─ 📂 project/           # 项目管理
 │  ├─ 📂 script/            # 剧本生成
 │  ├─ 📂 scriptAgent/       # 剧本 Agent 接口
 │  ├─ 📂 setting/           # 系统设置
+│  │   └─ agentDeploy/
+│  │       └─ updateAgentModel.ts  # 🆕 Agent模型动态更新
 │  └─ 📂 task/              # 任务管理
 ├─ 📂 socket/               # WebSocket 实时通信
 ├─ 📂 types/                # TypeScript 类型声明
