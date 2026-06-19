@@ -213,7 +213,31 @@ function createSubAgent(parentCtx: AgentContext) {
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_agent_supervision.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      let systemPrompt = await fs.promises.readFile(skill, "utf-8");
+
+      // 注入导演审阅能力：按项目类型匹配 2-3 位导演风格，嵌入 system prompt
+      const projectData = await u.db("o_project").where("id", resTool.data.projectId).first();
+      const projectType = (projectData?.type ?? "").trim();
+      let matchedDirectors = DEFAULT_DIRECTORS;
+      for (const [keyword, directors] of Object.entries(TYPE_DIRECTOR_MAP)) {
+        if (projectType.includes(keyword)) { matchedDirectors = directors; break; }
+      }
+      const skillsDir = path.join(u.getPath("skills"), "director_skills");
+      const directorSections: string[] = [];
+      for (const d of matchedDirectors.slice(0, 3)) {
+        const f = path.join(skillsDir, `${d}.md`);
+        if (fs.existsSync(f)) {
+          const content = await fs.promises.readFile(f, "utf-8");
+          // 只注入导演风格摘要（前 2000 字），避免 prompt 过长
+          directorSections.push(`### ${d}风格参考\n\n${content.slice(0, 2000)}`);
+        }
+      }
+      if (directorSections.length > 0) {
+        systemPrompt = systemPrompt.replace(
+          "## Skills",
+          `## 导演风格参考（已预加载）\n\n以下导演风格档案已自动加载，请在创意审阅时参考：\n\n${directorSections.join("\n\n---\n\n")}\n\n## Skills`,
+        );
+      }
 
       return runAgent({
         key: "scriptAgent:supervisionAgent",
