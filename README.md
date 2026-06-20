@@ -283,7 +283,7 @@ POST /api/setting/agentDeploy/updateAgentModel
 
 ```shell
 # 克隆项目
-git clone https://github.com/<your-username>/auto-dramaflow.git
+git clone https://github.com/roco-of-king/auto-dramaflow.git
 cd auto-dramaflow
 
 # 使用 docker-compose 本地构建并启动
@@ -338,7 +338,7 @@ npm install -g yarn pm2
 
 ```bash
 cd /opt
-git clone https://github.com/<your-username>/auto-dramaflow.git
+git clone https://github.com/roco-of-king/auto-dramaflow.git
 cd auto-dramaflow
 yarn install
 yarn build
@@ -412,7 +412,7 @@ pm2 monit                # 监控面板
 1. **克隆项目**
 
    ```bash
-   git clone https://github.com/<your-username>/auto-dramaflow.git
+   git clone https://github.com/roco-of-king/auto-dramaflow.git
    cd auto-dramaflow
    ```
 
