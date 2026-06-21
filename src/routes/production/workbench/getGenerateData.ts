@@ -161,6 +161,8 @@ export default router.post(
     const trackIdMap = [...new Set<number>(trackData.map((t) => t.id!))];
     for (const trackId of trackIdMap) {
       const item = trackData.find((t) => t.id === trackId);
+      // 找到该 track 对应的第一个分镜 ID 用于模式同步
+      const firstStoryboardForTrack = storyboardList.find((s) => s.trackId === trackId);
       trackList.push({
         id: trackId,
         duration: item?.duration ?? 0,
@@ -168,6 +170,8 @@ export default router.post(
         state: (item?.state as "未生成" | "生成中" | "已完成" | "生成失败") ?? "未生成",
         reason: item?.reason ?? "",
         selectVideoId: Number(item?.videoId)!,
+        storyboardId: firstStoryboardForTrack?.id as number | undefined,
+        mode: (item as any)?.modelMode || (item as any)?.mode || "",
         medias: (() => {
           const storyboardMedias = storyboardTrackRecord[trackId] ?? [];
           const assetMedias = storyboardMedias.flatMap((s) => otherDataMap[s.id] ?? []);
