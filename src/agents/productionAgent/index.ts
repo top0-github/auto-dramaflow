@@ -323,7 +323,7 @@ async function createSubAgent(parentCtx: AgentContext) {
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
       const addPrompt =
-        "\n你必须使用如下XML格式写入工作区：\n```\n<storyboardItem videoDesc='视频描述' prompt=提示词内容 track='分组' shouldGenerateImage='true/false' duration='视频推荐时间' associateAssetsIds='[该分镜所需的资产ID列表]'></storyboardItem>\n```";
+        "\n你必须使用如下XML格式写入工作区（如果决策层指定了「首尾帧模式」，则必须包含 firstFrameState/lastFrameState/firstFramePrompt/lastFramePrompt/inTransitionDesc/outTransitionDesc/modelMode 属性）：\n```\n<storyboardItem videoDesc='视频描述' prompt='提示词内容' track='分组' shouldGenerateImage='true/false' duration='视频推荐时间' associateAssetsIds='[该分镜所需的资产ID列表]' firstFrameState='首帧状态' lastFrameState='尾帧状态' firstFramePrompt='首帧图提示词' lastFramePrompt='尾帧图提示词' inTransitionDesc='入场衔接' outTransitionDesc='出场衔接' modelMode='firstLastFrame'></storyboardItem>\n```";
 
       const result = await runAgent({
         key: "productionAgent:storyboardPanelAgent",
@@ -384,6 +384,13 @@ async function createSubAgent(parentCtx: AgentContext) {
               shouldGenerateImage: item.shouldGenerateImage === "true" ? 1 : 0,
               index: idx,
               createTime: Date.now(),
+              firstFrameState: item.firstFrameState || null,
+              lastFrameState: item.lastFrameState || null,
+              firstFramePrompt: item.firstFramePrompt || null,
+              lastFramePrompt: item.lastFramePrompt || null,
+              inTransitionDesc: item.inTransitionDesc || null,
+              outTransitionDesc: item.outTransitionDesc || null,
+              modelMode: item.modelMode || null,
             });
           }
         }
