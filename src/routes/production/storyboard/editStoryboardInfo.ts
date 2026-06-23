@@ -37,8 +37,8 @@ export default router.post(
     if (outTransitionDesc !== undefined) updateData.outTransitionDesc = outTransitionDesc;
     if (modelMode !== undefined) updateData.modelMode = modelMode;
     if (extendsFromId !== undefined) updateData.extendsFromId = extendsFromId;
-    if (firstFramePath !== undefined) updateData.firstFramePath = firstFramePath;
-    if (lastFramePath !== undefined) updateData.lastFramePath = lastFramePath;
+    if (firstFramePath !== undefined) updateData.firstFramePath = u.replaceUrl(firstFramePath);
+    if (lastFramePath !== undefined) updateData.lastFramePath = u.replaceUrl(lastFramePath);
     await u.db("o_storyboard").where({ id }).update(updateData);
     res.status(200).send(success({ message: "更新提示词成功" }));
   },
