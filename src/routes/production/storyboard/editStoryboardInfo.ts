@@ -21,9 +21,11 @@ export default router.post(
     outTransitionDesc: z.string().optional(),
     modelMode: z.string().optional(),
     extendsFromId: z.number().optional(),
+    firstFramePath: z.string().optional(),
+    lastFramePath: z.string().optional(),
   }),
   async (req, res) => {
-    const { id, prompt, videoDesc, firstFrameState, lastFrameState, firstFramePrompt, lastFramePrompt, inTransitionDesc, outTransitionDesc, modelMode, extendsFromId } = req.body;
+    const { id, prompt, videoDesc, firstFrameState, lastFrameState, firstFramePrompt, lastFramePrompt, inTransitionDesc, outTransitionDesc, modelMode, extendsFromId, firstFramePath, lastFramePath } = req.body;
     const updateData: Record<string, any> = {};
     if (prompt !== undefined) updateData.prompt = prompt;
     if (videoDesc !== undefined) updateData.videoDesc = videoDesc;
@@ -35,6 +37,8 @@ export default router.post(
     if (outTransitionDesc !== undefined) updateData.outTransitionDesc = outTransitionDesc;
     if (modelMode !== undefined) updateData.modelMode = modelMode;
     if (extendsFromId !== undefined) updateData.extendsFromId = extendsFromId;
+    if (firstFramePath !== undefined) updateData.firstFramePath = firstFramePath;
+    if (lastFramePath !== undefined) updateData.lastFramePath = lastFramePath;
     await u.db("o_storyboard").where({ id }).update(updateData);
     res.status(200).send(success({ message: "更新提示词成功" }));
   },
