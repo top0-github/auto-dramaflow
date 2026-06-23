@@ -151,6 +151,17 @@ export default router.post(
             shouldGenerateImage: i.shouldGenerateImage,
             reason: i?.reason ?? "",
             flowId: i.flowId,
+            trackId: i.trackId,
+            // 首尾帧扩展字段
+            firstFramePath: i.firstFramePath || undefined,
+            lastFramePath: i.lastFramePath || undefined,
+            firstFrameState: i.firstFrameState ?? undefined,
+            lastFrameState: i.lastFrameState ?? undefined,
+            firstFramePrompt: i.firstFramePrompt ?? undefined,
+            lastFramePrompt: i.lastFramePrompt ?? undefined,
+            inTransitionDesc: i.inTransitionDesc ?? undefined,
+            outTransitionDesc: i.outTransitionDesc ?? undefined,
+            modelMode: i.modelMode ?? undefined,
           }))
           .sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
         res.status(200).send(success(flowData));
