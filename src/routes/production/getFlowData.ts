@@ -98,6 +98,21 @@ export default router.post(
             } else {
               i.filePath = "";
             }
+            // 首尾帧图片路径也转为 OSS URL
+            if (i.firstFramePath) {
+              try {
+                i.firstFramePath = await u.oss.getSmallImageUrl(i.firstFramePath);
+              } catch {
+                i.firstFramePath = null;
+              }
+            }
+            if (i.lastFramePath) {
+              try {
+                i.lastFramePath = await u.oss.getSmallImageUrl(i.lastFramePath);
+              } catch {
+                i.lastFramePath = null;
+              }
+            }
           }),
         );
         const storyboardIds = storyboardData.map((i) => i.id);
