@@ -184,9 +184,15 @@ export interface o_storyboard {
   'createTime'?: number | null;
   'duration'?: string | null;
   'filePath'?: string | null;
+  'firstFramePath'?: string | null;
+  'firstFramePrompt'?: string | null;
+  'firstFrameState'?: string | null;
   'flowId'?: number | null;
   'id'?: number;
   'index'?: number | null;
+  'lastFramePath'?: string | null;
+  'lastFramePrompt'?: string | null;
+  'lastFrameState'?: string | null;
   'projectId'?: number | null;
   'prompt'?: string | null;
   'reason'?: string | null;
@@ -222,11 +228,15 @@ export interface o_vendorConfig {
 export interface o_video {
   'errorReason'?: string | null;
   'filePath'?: string | null;
+  'generationRound'?: number | null;
   'id'?: number;
+  'mode'?: string | null;
   'projectId'?: number | null;
   'scriptId'?: number | null;
+  'sourceVideoId'?: number | null;
   'state'?: string | null;
   'time'?: number | null;
+  'userDeleted'?: number | null;
   'videoTrackId'?: number | null;
 }
 export interface o_videoTrack {
