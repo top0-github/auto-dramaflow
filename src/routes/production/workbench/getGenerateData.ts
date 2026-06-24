@@ -25,6 +25,8 @@ interface TrackItem {
   reason?: string;
   duration?: number;
   selectVideoId?: number;
+  storyboardId?: number;
+  mode: string;
   medias: TrackMedia[];
   videoList: VideoItem[];
 }
