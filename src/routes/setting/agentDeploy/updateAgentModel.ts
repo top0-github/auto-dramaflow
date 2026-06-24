@@ -1,3 +1,11 @@
+/**
+ * Based on Toonflow (https://github.com/HBAI-Ltd/Toonflow-app)
+ * Original work Copyright (c) 2025 HBAI-Ltd
+ * Licensed under Apache 2.0 with supplementary terms.
+ *
+ * Modified by roco-of-king, 2026
+ * Added: Agent模型动态更新接口
+ */
 import express from "express";
 import { success } from "@/lib/responseFormat";
 import u from "@/utils";

@@ -26,9 +26,9 @@
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Electron/electron2.svg" alt="Electron" />
   </p>
 
-  > 🚀 **一站式短剧工程**：从文本到角色，从分镜到视频，0门槛全流程AI化，创作效率提升10倍+！
+  > 🚀 **Auto-Dramaflow** — 基于 AI 的短剧/漫剧一站式生产平台。支持小说智能改编、AI 剧本生成、角色/场景/道具素材管理、分镜图生成、视频合成、TTS 配音等完整创作链路。
   >
-  > 本项目基于 [Toonflow](https://github.com/HBAI-Ltd/Toonflow-app) 进行二次开发，新增了**阿里云百炼(DashScope)通义千问模型**、**独立素材上传页面**、**导演技能库(director_skills)**、**导演审阅子Agent**、**分镜图管理接口**等功能。
+  > 本项目基于 [Toonflow](https://github.com/HBAI-Ltd/Toonflow-app) v1.1.7 二次开发，在上游能力基础上新增：**首尾帧双卡片模式**、**卡片级联视频工作台**、**阿里云百炼 DashScope 全系接入**、**37 位导演技能库 + 审阅子 Agent**、**14 套画风技能**、**13 项生产技能专精**、**7 套 Seedance 2.0 场景提示词模板**、**独立素材上传门户**、**分镜图管理接口**及 **Agent 模型动态切换**等功能。
 </div>
 
 ---
@@ -52,18 +52,30 @@ Auto-Dramaflow 是面向短剧生产的 AI 工作台，围绕"策划 → 编剧 
 
 ### 🆕 本仓库新增功能
 
+- ✅ **首尾帧双卡片模式**  
+  分镜表支持首帧/尾帧双卡片展示，前端双卡片预览 + 后端 `firstFramePath`/`lastFramePath` 字段全链路贯通，支持 URL↔路径自动转换及 OSS 签名 URL 输出。
+- ✅ **卡片级联视频工作台**  
+  分镜卡片与视频轨道按 track 分组级联排列，支持多模态视频模型（文生/图生/首尾帧/多参考）混排生产，一键批量生成全轨道视频。
 - ✅ **阿里云百炼(DashScope)通义千问模型支持**  
   新增 DashScope 供应商，完整支持 Qwen3/Qwen2.5 系列文本模型、Wan2.6 图片生成、Wan2.7 及 HappyHorse 视频生成。
 - ✅ **独立素材上传页面 (upload.html)**  
   提供独立的 Web 素材上传界面，支持新建素材/关联已有素材两种模式，方便快速批量导入角色、场景、道具图片。
 - ✅ **导演技能库 (director_skills)**  
-  新增 31 位知名导演风格配置（如克里斯托弗·诺兰、周星驰、宫崎骏等），导演 Agent 可参考对应风格进行分镜规划和影片节奏控制。
+  37 位知名导演风格配置（克里斯托弗·诺兰、王家卫、张艺谋、宫崎骏、新海诚、丹尼斯·维伦纽瓦等），导演 Agent 可参考对应风格进行分镜规划和影片节奏控制。
 - ✅ **导演审阅子 Agent**  
   ScriptAgent 新增导演审阅子 Agent，可基于导演风格对剧本和分镜进行风格化审阅与调整建议。
+- ✅ **画风技能扩展 (14 套)**  
+  新增 7 套画风：中国水墨、赛博朋克黑色电影、游戏电影级、油画厚涂、时尚编辑、漫画动态分镜、水彩诗意，覆盖 2D/3D/写实等多维度风格。
+- ✅ **生产技能专精库 (13 项)**  
+  新增视听语言规范、合规过滤、材质增强（毛绒/平面/金属）、天气控制、好莱坞调色、中国电影 LUT、摄影级角色/场景提示词、生理细节标准、Seedance 提示词模式库、镜头构图等生产级技能。
+- ✅ **Seedance 2.0 场景提示词模板 (7 套)**  
+  覆盖动漫动作、电影史诗、黑色电影、短剧总裁、短剧情感、素描喜剧、UGC Vlog 七大场景，开箱即用。
 - ✅ **分镜图管理接口**  
   新增分镜图上传 (`storyboard/uploadImage`)、重置 (`storyboard/resetImage`) 及视频提示词检查 (`workbench/checkVideoPrompt`) 接口，完善分镜工作流。
 - ✅ **Agent 模型配置动态更新**  
   新增 `setting/agentDeploy/updateAgentModel` 接口，支持在线动态切换各 Agent 子模块所使用的 AI 模型，无需重启服务。
+- ✅ **多模态视频模型数据库适配**  
+  三张核心表新增 18 个字段，支持多模态视频模型（首尾帧、多参考图、音频可选）的模式记录与状态追踪。
 
 ---
 
@@ -283,7 +295,7 @@ POST /api/setting/agentDeploy/updateAgentModel
 
 ```shell
 # 克隆项目
-git clone https://github.com/<your-username>/auto-dramaflow.git
+git clone https://github.com/roco-of-king/auto-dramaflow.git
 cd auto-dramaflow
 
 # 使用 docker-compose 本地构建并启动
@@ -338,7 +350,7 @@ npm install -g yarn pm2
 
 ```bash
 cd /opt
-git clone https://github.com/<your-username>/auto-dramaflow.git
+git clone https://github.com/roco-of-king/auto-dramaflow.git
 cd auto-dramaflow
 yarn install
 yarn build
@@ -412,7 +424,7 @@ pm2 monit                # 监控面板
 1. **克隆项目**
 
    ```bash
-   git clone https://github.com/<your-username>/auto-dramaflow.git
+   git clone https://github.com/roco-of-king/auto-dramaflow.git
    cd auto-dramaflow
    ```
 
@@ -562,6 +574,6 @@ pm2 monit                # 监控面板
 
 > ⚠️ 上游 Toonflow 项目有其独立的商业授权补充协议，如涉及商业分发请参考[上游仓库](https://github.com/HBAI-Ltd/Toonflow-app)的完整许可条款。
 
-##### copyright © 基于 Toonflow 二次开发
+© 2025 HBAI-Ltd (original Toonflow) | © 2026 roco-of-king (Auto-Dramaflow modifications) | Licensed under Apache 2.0 with supplementary terms — see [LICENSE](./LICENSE)
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=100&section=footer" width="100%"/>

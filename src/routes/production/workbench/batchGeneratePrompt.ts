@@ -3,6 +3,8 @@ import u from "@/utils";
 import { z } from "zod";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import fs from "fs/promises";
+import path from "path";
 const router = express.Router();
 
 export default router.post(
@@ -34,6 +36,31 @@ export default router.post(
     let videoPromptGeneration = videoPrompt?.useData || videoPrompt?.data || "";
     const artStyle = projectData?.artStyle || "无";
     const visualManual = u.getArtPrompt(artStyle, "art_skills", "art_storyboard_video");
+
+    // 尝试加载类型专属模板（如短剧情感/史诗电影等），追加到基础模板
+    const [vendorId2, modelData2] = model.split(/:(.+)/);
+    if (/seedance/i.test(modelData2)) {
+      const projectType = (projectData?.type ?? "").trim();
+      const genreMap: Record<string, string> = {
+        "爱情": "seedance2ShortDramaEmotional.md", "言情": "seedance2ShortDramaEmotional.md",
+        "霸总": "seedance2ShortDramaCEO.md", "逆袭": "seedance2ShortDramaCEO.md", "爽剧": "seedance2ShortDramaCEO.md",
+        "喜剧": "seedance2SketchComedy.md", "搞笑": "seedance2SketchComedy.md",
+        "科幻": "seedance2CinematicEpic.md", "史诗": "seedance2CinematicEpic.md", "动作": "seedance2CinematicEpic.md", "战争": "seedance2CinematicEpic.md",
+        "悬疑": "seedance2CinematicNoir.md", "惊悚": "seedance2CinematicNoir.md", "文艺": "seedance2CinematicNoir.md",
+        "动画": "seedance2AnimeAction.md", "动漫": "seedance2AnimeAction.md",
+        "UGC": "seedance2UGCVlog.md", "Vlog": "seedance2UGCVlog.md",
+      };
+      for (const [keyword, file] of Object.entries(genreMap)) {
+        if (projectType.includes(keyword)) {
+          try {
+            const modelPromptRoot = u.getPath(["modelPrompt"]);
+            const genreContent = await fs.readFile(path.join(modelPromptRoot, "video", file), "utf-8");
+            videoPromptGeneration = `${videoPromptGeneration}\n\n---\n\n## 附加：当前项目类型专属的提示词生成风格参考\n\n${genreContent}`;
+          } catch { /* 忽略 */ }
+          break;
+        }
+      }
+    }
 
     const results: { trackId: number; prompt: string; error?: string }[] = [];
 
