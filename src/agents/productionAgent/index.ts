@@ -343,11 +343,9 @@ async function createSubAgent(parentCtx: AgentContext) {
         const scriptId = resTool.data.scriptId || (await u.db("o_script").where("projectId", resTool.data.projectId).select("id").first())?.id;
         // 先清除该 scriptId 下的旧分镜和旧轨道
         if (scriptId) {
-          const oldTrackIds = (await u.db("o_storyboard").where("scriptId", scriptId).select("trackId")).map((r: any) => r.trackId).filter(Boolean);
           await u.db("o_storyboard").where("scriptId", scriptId).delete();
-          for (const tid of oldTrackIds) {
-            await u.db("o_videoTrack").where("id", tid).delete();
-          }
+          // 清除该脚本下所有视频轨道（含手动创建的孤儿轨道）
+          await u.db("o_videoTrack").where("scriptId", scriptId).delete();
         }
         // 按 track 分组，为每个 track 创建轨道（trackId 按 track 标签排序后递增）
         const trackMap = new Map<string, { trackId: number; items: typeof storyboardItems }>();
