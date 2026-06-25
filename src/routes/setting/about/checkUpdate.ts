@@ -37,8 +37,13 @@ export default router.post(
 
     const getUrl = url ?? "https://toonflow.oss-cn-beijing.aliyuncs.com/update.json";
 
-    const versionInfo = await fetch(getUrl).then((res) => res.json());
-    if (!versionInfo) return res.status(400).send(error("无法获取版本信息"));
+    let versionInfo: any;
+    try {
+      versionInfo = await fetch(getUrl).then((res) => res.json());
+    } catch {
+      return res.status(200).send(success({ needUpdate: false, latestVersion: APP_VERSION, skipped: true, message: "检查更新失败（网络不通），已跳过" }));
+    }
+    if (!versionInfo) return res.status(200).send(success({ needUpdate: false, latestVersion: APP_VERSION, skipped: true }));
     const { version: tagger, time, data } = versionInfo;
 
     const sourceData = data[source];
